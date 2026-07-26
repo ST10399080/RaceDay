@@ -361,9 +361,9 @@ The Independent Institute of Education (IIE)
 
 # 📜 License
 
-This project was developed for educational purposes as part of the **PROG6212 Programming 2B Portfolio of Evidence (POE)**.
+This project is licensed under the MIT License.
 
----
+See [LICENSE](LICENSE) for full details.
 
 <div align="center">
 
