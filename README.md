@@ -321,7 +321,7 @@ Tests include:
 
 📺 YouTube:
 
-> **Paste your Unlisted YouTube Link Here**
+> 
 
 ---
 
@@ -337,7 +337,7 @@ Inside the **/docs** folder:
 
 # 👨‍💻 Developer
 
-**F Z**
+**Fezile Jam-Jam (ST10399080)**
 
 Programming 2B (PROG6212)
 
