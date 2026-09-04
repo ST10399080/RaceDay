@@ -26,8 +26,8 @@ jobs:
       - name: Check required files
         run: |
           required_files=(
-            "ERD.pdf"
-            "API_Endpoint_Plan.pdf"
+            "ST10399080_PROG6212_PART_1_ERD (SECTION A).pdf"
+            "ST10399080_PROG6212_PART_1_API_ENDPOINT_PLAN (SECTION B) (1).pdf"
             "RaceDay.sql"
           )
 
