@@ -33,12 +33,19 @@ Whether it's a **5km Fun Run**, **Half Marathon**, **Cycling Challenge**, or **C
 RaceDay aims to provide a complete digital solution for sporting event management by allowing:
 
 ✅ Event Creation
+
 ✅ Participant Registration
+
 ✅ Category Management
+
 ✅ Event Enrolment
+
 ✅ Race Result Management
+
 ✅ Secure Authentication
+
 ✅ Cloud Image Storage
+
 ✅ Role-Based Access Control
 
 ---
