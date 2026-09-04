@@ -33,19 +33,12 @@ Whether it's a **5km Fun Run**, **Half Marathon**, **Cycling Challenge**, or **C
 RaceDay aims to provide a complete digital solution for sporting event management by allowing:
 
 ✅ Event Creation
-
 ✅ Participant Registration
-
 ✅ Category Management
-
 ✅ Event Enrolment
-
 ✅ Race Result Management
-
 ✅ Secure Authentication
-
 ✅ Cloud Image Storage
-
 ✅ Role-Based Access Control
 
 ---
@@ -187,9 +180,9 @@ They can:
 RaceDay/
 │
 ├── docs/
-│   ├── ERD.pdf
-│   ├── API_Endpoint_Plan.pdf
-│   └── RaceDay.sql
+│   ├── RaceDay.sql
+│   ├── ST10399080_PROG6212_PART_1_API_ENDPOINT_PLAN.SECTION.B.1.pdf
+│   └── ST10399080_PROG6212_PART_1_ERD.SECTION.A.pdf
 │
 ├── RaceDay.API/
 │
@@ -298,7 +291,7 @@ GitHub Actions automatically:
 * ✅ Runs unit tests
 * ✅ Verifies project integrity
 
-## 🟢 Latest Build
+## 🟢 Latest Build (Screenshot)
 
 <img width="1363" height="634" alt="Screenshot 2026-09-04 230643" src="https://github.com/user-attachments/assets/5e57242e-e764-4deb-8ada-b3cd2e6ca2d5" />
 <img width="1360" height="394" alt="Screenshot 2026-09-04 230726" src="https://github.com/user-attachments/assets/b123bef7-9b12-4cd3-ab5e-64af4c477243" />
