@@ -300,7 +300,10 @@ GitHub Actions automatically:
 
 ## 🟢 Latest Build
 
-> 📸 **Insert Green Build Screenshot Here**
+<img width="1363" height="634" alt="Screenshot 2026-09-04 230643" src="https://github.com/user-attachments/assets/5e57242e-e764-4deb-8ada-b3cd2e6ca2d5" />
+<img width="1360" height="394" alt="Screenshot 2026-09-04 230726" src="https://github.com/user-attachments/assets/b123bef7-9b12-4cd3-ab5e-64af4c477243" />
+<img width="1365" height="767" alt="Screenshot 2026-09-04 230744" src="https://github.com/user-attachments/assets/582bb813-a4d0-4dec-8195-800d80f8b45e" />
+<img width="1365" height="767" alt="Screenshot 2026-09-04 230814" src="https://github.com/user-attachments/assets/acd7e3a1-5b12-453b-9cd5-e86b70bbaf80" />
 
 ---
 
