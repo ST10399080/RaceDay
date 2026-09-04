@@ -26,9 +26,9 @@ jobs:
       - name: Check required files
         run: |
           required_files=(
-            "docs/ST10399080_PROG6212_PART_1_ERD (SECTION A).pdf"
-            "docs/ST10399080_PROG6212_PART_1_API_ENDPOINT_PLAN (SECTION B) (1).pdf"
             "docs/RaceDay.sql"
+            "docs/ST10399080_PROG6212_PART_1_API_ENDPOINT_PLAN.SECTION.B.1.pdf"
+            "docs/ST10399080_PROG6212_PART_1_ERD.SECTION.A.pdf"
           )
 
           for file in "${required_files[@]}"; do
