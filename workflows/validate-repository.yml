@@ -1,1 +1,48 @@
+name: Validate Repository Structure
 
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate-structure:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check docs folder
+        run: |
+          echo "Checking repository structure..."
+
+          if [ ! -d "docs" ]; then
+            echo "ERROR: /docs folder does not exist."
+            exit 1
+          fi
+
+          echo "SUCCESS: /docs folder exists."
+
+      - name: Check required files
+        run: |
+          required_files=(
+            "docs/RaceDay_Database_Script.sql"
+            "docs/ERD.png"
+            "docs/Requirements_Analysis.pdf"
+            "docs/Project_Plan.pdf"
+          )
+
+          for file in "${required_files[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "ERROR: Required file missing: $file"
+              exit 1
+            fi
+
+            echo "FOUND: $file"
+          done
+
+          echo "All required files are present."
+
+      - name: Validation successful
+        run: |
+          echo "Repository structure validation passed."
