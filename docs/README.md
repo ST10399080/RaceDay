@@ -2,3 +2,4 @@
 
 [ST10399080_PROG6212_PART_1_API_ENDPOINT_PLAN (SECTION B) (1).pdf](https://github.com/user-attachments/files/31826683/ST10399080_PROG6212_PART_1_API_ENDPOINT_PLAN.SECTION.B.1.pdf)
 
+[RaceDay.sql](https://github.com/user-attachments/files/31834226/RaceDay.sql)
