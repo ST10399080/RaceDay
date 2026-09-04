@@ -187,7 +187,7 @@ They can:
 RaceDay/
 │
 ├── docs/
-│   ├── ERD.png
+│   ├── ERD.pdf
 │   ├── API_Endpoint_Plan.pdf
 │   └── RaceDay.sql
 │
