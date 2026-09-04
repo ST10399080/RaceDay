@@ -23,11 +23,6 @@ jobs:
 
           echo "SUCCESS: /docs folder exists."
 
-                - name: Show repository structure
-          run: |
-          echo "Repository contents:"
-          find . -type f
-
       - name: Check required files
         run: |
           required_files=(
