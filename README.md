@@ -346,7 +346,7 @@ Inside the **/docs** folder:
 
 Programming 2B (PROG6212)
 
-The Independent Institute of Education (IIE)
+The Independent Institute of Education (IIE) Rosebank International Braamfontein
 
 ---
 
