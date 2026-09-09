@@ -52,7 +52,7 @@ RaceDay aims to provide a complete digital solution for sporting event managemen
 
 # 🌟 Key Features
 
-## 👨‍💼 Organiser
+## 👨‍💼 Organizer
 
 * 🏁 Create sporting events
 * ✏️ Edit existing events
@@ -107,8 +107,6 @@ RaceDay aims to provide a complete digital solution for sporting event managemen
 * ASP.NET Core MVC
 * HTML5
 * CSS3
-* Bootstrap 5
-* JavaScript
 
 ---
 
