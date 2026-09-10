@@ -189,7 +189,7 @@ RaceDay/
 │   ├── ST10399080_PROG6212_PART_1_API_ENDPOINT_PLAN.SECTION.B.1.pdf
 │   └── ST10399080_PROG6212_PART_1_ERD.SECTION.A.pdf
 │
-├── RaceDay.API/
+├── part-2-api/
 │
 ├── RaceDay.MVC/
 │
