@@ -322,7 +322,7 @@ Tests include:
 
 📺 YouTube:
 
-* Part 1:
+* Part 1: https://youtu.be/2QMQ5Xq2Ltk (I Aplogoize For The Lack Of Sound I Tried With All My Might, OBS Studio's Mic Does Not Work On A Virtual Machine)
 * Part 2:
 * POE:
 
