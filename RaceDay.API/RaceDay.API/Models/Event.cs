@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RaceDay.API.Models;
 
@@ -12,17 +13,19 @@ public class Event
     public User Organiser { get; set; } = null!;
 
     [Required]
-    [MaxLength(150)]
+    [MaxLength(100)]
     public string EventName { get; set; } = string.Empty;
 
-    [MaxLength(2000)]
+    [Required]
+    [MaxLength(500)]
     public string Description { get; set; } = string.Empty;
 
     [Required]
+    [Column(TypeName = "date")]
     public DateTime EventDate { get; set; }
 
     [Required]
-    [MaxLength(200)]
+    [MaxLength(150)]
     public string Location { get; set; } = string.Empty;
 
     [Range(0.1, 1000)]

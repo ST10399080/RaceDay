@@ -21,6 +21,9 @@ public class RaceDayDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder.Entity<Participant>().ToTable("Participant");
+        modelBuilder.Entity<Category>().ToTable("Category");
+
         // User: unique email address
         modelBuilder.Entity<User>()
             .HasIndex(u => u.Email)
@@ -33,9 +36,50 @@ public class RaceDayDbContext : DbContext
             .HasForeignKey<Participant>(p => p.UserID)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // Category names must be unique within each event
+        modelBuilder.Entity<Category>()
+            .HasIndex(c => new { c.EventID, c.CategoryName })
+            .IsUnique();
+
+        // Restrict User roles to the two permitted values
+        modelBuilder.Entity<User>()
+            .ToTable("User", table =>
+                table.HasCheckConstraint(
+                    "CK_User_Role",
+                    "[Role] IN ('Organiser', 'Participant')"));
+
+        // Restrict event types to the permitted values
+        modelBuilder.Entity<Event>()
+            .ToTable("Event", table =>
+                table.HasCheckConstraint(
+                    "CK_Event_EventType",
+                    "[EventType] IN ('Run', 'Walk', 'Cycle')"));
+
+        // Only positive finishing positions are allowed
+        modelBuilder.Entity<Result>()
+            .ToTable("Result", table =>
+                table.HasCheckConstraint(
+                    "CK_Result_Position",
+                    "[Position] > 0"));
+
         modelBuilder.Entity<Participant>()
             .HasIndex(p => p.UserID)
             .IsUnique();
+
+
+        modelBuilder.Entity<Enrolment>()
+            .Property(e => e.EnrolmentDate)
+            .HasDefaultValueSql("SYSDATETIME()");
+
+        modelBuilder.Entity<Enrolment>()
+            .Property(e => e.Status)
+            .HasDefaultValue("Pending");
+
+        modelBuilder.Entity<Enrolment>()
+            .ToTable("Enrolment", table =>
+                table.HasCheckConstraint(
+                    "CK_Enrolment_Status",
+                    "[Status] IN ('Pending', 'Confirmed', 'Cancelled')"));
 
         // User: Organiser -> Events (one-to-many)
         modelBuilder.Entity<Event>()
@@ -91,6 +135,6 @@ public class RaceDayDbContext : DbContext
         // Database precision for event distance
         modelBuilder.Entity<Event>()
             .Property(e => e.Distance)
-            .HasPrecision(8, 2);
+            .HasPrecision(6, 2);
     }
 }

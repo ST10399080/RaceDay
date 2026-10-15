@@ -12,7 +12,7 @@ public class Category
     public Event Event { get; set; } = null!;
 
     [Required]
-    [MaxLength(100)]
+    [MaxLength(50)]
     public string CategoryName { get; set; } = string.Empty;
 
     public ICollection<Enrolment> Enrolments { get; set; }

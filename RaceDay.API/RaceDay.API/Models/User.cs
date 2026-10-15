@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace RaceDay.API.Models;
 
@@ -8,19 +7,20 @@ public class User
     public int UserID { get; set; }
 
     [Required]
-    [MaxLength(100)]
+    [MaxLength(50)]
     public string FirstName { get; set; } = string.Empty;
 
     [Required]
-    [MaxLength(100)]
+    [MaxLength(50)]
     public string Surname { get; set; } = string.Empty;
 
     [Required]
     [EmailAddress]
-    [MaxLength(256)]
+    [MaxLength(100)]
     public string Email { get; set; } = string.Empty;
 
     [Required]
+    [MaxLength(255)]
     public string PasswordHash { get; set; } = string.Empty;
 
     [Required]
