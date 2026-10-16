@@ -64,4 +64,30 @@ public class UnitTest1
         Assert.True(isValid);
         Assert.Empty(validationResults);
     }
+
+    [Fact]
+    public void CategoryCreateRequest_EmptyName_FailsValidation()
+    {
+        // Arrange
+        var request = new CategoryCreateRequest
+        {
+            CategoryName = ""
+        };
+
+        var validationResults = new List<ValidationResult>();
+        var validationContext = new ValidationContext(request);
+
+        // Act
+        var isValid = Validator.TryValidateObject(
+            request,
+            validationContext,
+            validationResults,
+            validateAllProperties: true);
+
+        // Assert
+        Assert.False(isValid);
+        Assert.Contains(
+            validationResults,
+            result => result.MemberNames.Contains("CategoryName"));
+    }
 }
