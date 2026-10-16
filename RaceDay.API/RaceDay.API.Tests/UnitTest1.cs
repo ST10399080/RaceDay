@@ -173,4 +173,181 @@ public class UnitTest1
             validationResults,
             result => result.MemberNames.Contains("Email"));
     }
+
+    [Fact]
+    public void RegisterRequest_ShortPassword_FailsValidation()
+    {
+        // Arrange
+        var request = new RegisterRequest
+        {
+            FirstName = "Test",
+            Surname = "Participant",
+            Email = "test.participant@example.com",
+            Password = "abc123"
+        };
+
+        var validationResults = new List<ValidationResult>();
+        var validationContext = new ValidationContext(request);
+
+        // Act
+        var isValid = Validator.TryValidateObject(
+            request,
+            validationContext,
+            validationResults,
+            validateAllProperties: true);
+
+        // Assert
+        Assert.False(isValid);
+        Assert.Contains(
+            validationResults,
+            result => result.MemberNames.Contains("Password"));
+    }
+    [Fact]
+    public void RegisterRequest_DoesNotExposeRoleProperty()
+    {
+        // Act
+        var roleProperty = typeof(RegisterRequest).GetProperty("Role");
+
+        // Assert
+        Assert.Null(roleProperty);
+    }
+
+    [Fact]
+    public void LoginRequest_InvalidEmail_FailsValidation()
+    {
+        // Arrange
+        var request = new LoginRequest
+        {
+            Email = "not-an-email",
+            Password = "ValidPassword123!"
+        };
+
+        var validationResults = new List<ValidationResult>();
+        var validationContext = new ValidationContext(request);
+
+        // Act
+        var isValid = Validator.TryValidateObject(
+            request,
+            validationContext,
+            validationResults,
+            validateAllProperties: true);
+
+        // Assert
+        Assert.False(isValid);
+        Assert.Contains(
+            validationResults,
+            result => result.MemberNames.Contains("Email"));
+    }
+
+    [Fact]
+    public void RegisterRequest_LongPassword_FailsValidation()
+    {
+        // Arrange
+        var request = new RegisterRequest
+        {
+            FirstName = "Test",
+            Surname = "Participant",
+            Email = "test.participant@example.com",
+            Password = new string('A', 101)
+        };
+
+        var validationResults = new List<ValidationResult>();
+        var validationContext = new ValidationContext(request);
+
+        // Act
+        var isValid = Validator.TryValidateObject(
+            request,
+            validationContext,
+            validationResults,
+            validateAllProperties: true);
+
+        // Assert
+        Assert.False(isValid);
+        Assert.Contains(
+            validationResults,
+            result => result.MemberNames.Contains("Password"));
+    }
+
+    [Fact]
+    public void LoginRequest_EmptyPassword_FailsValidation()
+    {
+        // Arrange
+        var request = new LoginRequest
+        {
+            Email = "participant@example.com",
+            Password = string.Empty
+        };
+
+        var validationResults = new List<ValidationResult>();
+        var validationContext = new ValidationContext(request);
+
+        // Act
+        var isValid = Validator.TryValidateObject(
+            request,
+            validationContext,
+            validationResults,
+            validateAllProperties: true);
+
+        // Assert
+        Assert.False(isValid);
+        Assert.Contains(
+            validationResults,
+            result => result.MemberNames.Contains("Password"));
+    }
+
+    [Fact]
+    public void LoginRequest_EmptyEmail_FailsValidation()
+    {
+        // Arrange
+        var request = new LoginRequest
+        {
+            Email = string.Empty,
+            Password = "ValidPassword123!"
+        };
+
+        var validationResults = new List<ValidationResult>();
+        var validationContext = new ValidationContext(request);
+
+        // Act
+        var isValid = Validator.TryValidateObject(
+            request,
+            validationContext,
+            validationResults,
+            validateAllProperties: true);
+
+        // Assert
+        Assert.False(isValid);
+        Assert.Contains(
+            validationResults,
+            result => result.MemberNames.Contains("Email"));
+    }
+
+    [Fact]
+    public void RegisterRequest_InvalidEmail_FailsValidation()
+    {
+        // Arrange
+        var request = new RegisterRequest
+        {
+            FirstName = "Test",
+            Surname = "Participant",
+            Email = "invalid-email",
+            Password = "ValidPassword123!"
+        };
+
+        var validationResults = new List<ValidationResult>();
+        var validationContext = new ValidationContext(request);
+
+        // Act
+        var isValid = Validator.TryValidateObject(
+            request,
+            validationContext,
+            validationResults,
+            validateAllProperties: true);
+
+        // Assert
+        Assert.False(isValid);
+        Assert.Contains(
+            validationResults,
+            result => result.MemberNames.Contains("Email"));
+    }
 }
