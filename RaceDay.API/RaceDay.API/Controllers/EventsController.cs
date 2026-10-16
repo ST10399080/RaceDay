@@ -174,4 +174,45 @@ public class EventsController : ControllerBase
             existingEvent.BannerImageURL
         });
     }
+
+    /// <summary>
+    /// Deletes an existing event.
+    /// Only the Organiser who owns the event can delete it.
+    /// </summary>
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Organiser")]
+    public async Task<IActionResult> DeleteEvent(int id)
+    {
+        var userIdClaim = User.FindFirst(
+            ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var organiserId))
+        {
+            return Unauthorized(new
+            {
+                message = "The authenticated Organiser ID could not be determined."
+            });
+        }
+
+        var existingEvent = await _context.Events
+            .FirstOrDefaultAsync(e => e.EventID == id);
+
+        if (existingEvent == null)
+        {
+            return NotFound(new
+            {
+                message = "Event not found."
+            });
+        }
+
+        if (existingEvent.OrganiserID != organiserId)
+        {
+            return Forbid();
+        }
+
+        _context.Events.Remove(existingEvent);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
 }
