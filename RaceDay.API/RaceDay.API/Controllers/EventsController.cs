@@ -112,4 +112,66 @@ public class EventsController : ControllerBase
                 newEvent.BannerImageURL
             });
     }
+
+    /// <summary>
+    /// Updates an existing event.
+    /// Only the Organiser who owns the event can update it.
+    /// </summary>
+    [HttpPut("{id:int}")]
+    [Authorize(Roles = "Organiser")]
+    public async Task<IActionResult> UpdateEvent(
+        int id,
+        [FromBody] EventCreateRequest request)
+    {
+        var userIdClaim = User.FindFirst(
+            ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var organiserId))
+        {
+            return Unauthorized(new
+            {
+                message = "The authenticated Organiser ID could not be determined."
+            });
+        }
+
+        var existingEvent = await _context.Events
+            .FirstOrDefaultAsync(e => e.EventID == id);
+
+        if (existingEvent == null)
+        {
+            return NotFound(new
+            {
+                message = "Event not found."
+            });
+        }
+
+        if (existingEvent.OrganiserID != organiserId)
+        {
+            return Forbid();
+        }
+
+        existingEvent.EventName = request.EventName.Trim();
+        existingEvent.Description = request.Description.Trim();
+        existingEvent.EventDate = request.EventDate;
+        existingEvent.Location = request.Location.Trim();
+        existingEvent.Distance = request.Distance;
+        existingEvent.EventType = request.EventType.Trim();
+        existingEvent.BannerImageURL = request.BannerImageURL;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Event updated successfully.",
+            existingEvent.EventID,
+            existingEvent.OrganiserID,
+            existingEvent.EventName,
+            existingEvent.Description,
+            existingEvent.EventDate,
+            existingEvent.Location,
+            existingEvent.Distance,
+            existingEvent.EventType,
+            existingEvent.BannerImageURL
+        });
+    }
 }
