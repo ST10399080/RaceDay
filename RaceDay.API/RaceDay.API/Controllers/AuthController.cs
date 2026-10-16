@@ -173,4 +173,58 @@ public class AuthController : ControllerBase
             }
         });
     }
+
+    /// <summary>
+    /// DEVELOPMENT ONLY: Creates an Organiser account.
+    /// Remove this endpoint before deployment.
+    /// </summary>
+    [HttpPost("create-organiser-dev")]
+    public async Task<IActionResult> CreateOrganiserDev(
+        [FromBody] RegisterRequest request)
+    {
+        if (!HttpContext.RequestServices
+            .GetRequiredService<IWebHostEnvironment>()
+            .IsDevelopment())
+        {
+            return NotFound();
+        }
+
+        var email = request.Email.Trim().ToLowerInvariant();
+
+        var emailExists = await _context.Users
+            .AnyAsync(u => u.Email.ToLower() == email);
+
+        if (emailExists)
+        {
+            return Conflict(new
+            {
+                message = "An account with this email already exists."
+            });
+        }
+
+        var user = new User
+        {
+            FirstName = request.FirstName.Trim(),
+            Surname = request.Surname.Trim(),
+            Email = email,
+            Role = "Organiser"
+        };
+
+        user.PasswordHash = _passwordHasher.HashPassword(
+            user,
+            request.Password);
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        return StatusCode(StatusCodes.Status201Created, new
+        {
+            message = "Development Organiser created successfully.",
+            user.UserID,
+            user.FirstName,
+            user.Surname,
+            user.Email,
+            user.Role
+        });
+    }
 }
