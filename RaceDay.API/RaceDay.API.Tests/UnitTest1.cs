@@ -117,4 +117,60 @@ public class UnitTest1
             validationResults,
             result => result.MemberNames.Contains("EventID"));
     }
+
+    [Fact]
+    public void ResultCreateRequest_InvalidPosition_FailsValidation()
+    {
+        // Arrange
+        var request = new ResultCreateRequest
+        {
+            EnrolmentID = 1,
+            FinishTime = TimeSpan.FromHours(1),
+            Position = 0
+        };
+
+        var validationResults = new List<ValidationResult>();
+        var validationContext = new ValidationContext(request);
+
+        // Act
+        var isValid = Validator.TryValidateObject(
+            request,
+            validationContext,
+            validationResults,
+            validateAllProperties: true);
+
+        // Assert
+        Assert.False(isValid);
+        Assert.Contains(
+            validationResults,
+            result => result.MemberNames.Contains("Position"));
+    }
+
+    [Fact]
+    public void ProfileUpdateRequest_InvalidEmail_FailsValidation()
+    {
+        // Arrange
+        var request = new ProfileUpdateRequest
+        {
+            FirstName = "Thando",
+            Surname = "Mokoena",
+            Email = "not-an-email"
+        };
+
+        var validationResults = new List<ValidationResult>();
+        var validationContext = new ValidationContext(request);
+
+        // Act
+        var isValid = Validator.TryValidateObject(
+            request,
+            validationContext,
+            validationResults,
+            validateAllProperties: true);
+
+        // Assert
+        Assert.False(isValid);
+        Assert.Contains(
+            validationResults,
+            result => result.MemberNames.Contains("Email"));
+    }
 }
