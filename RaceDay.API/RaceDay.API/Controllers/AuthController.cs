@@ -1,7 +1,10 @@
-﻿
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using RaceDay.API.Data;
 using RaceDay.API.Models;
 using RaceDay.API.Models.DTOs;
@@ -14,10 +17,14 @@ public class AuthController : ControllerBase
 {
     private readonly RaceDayDbContext _context;
     private readonly IPasswordHasher<User> _passwordHasher;
+    private readonly IConfiguration _configuration;
 
-    public AuthController(RaceDayDbContext context)
+    public AuthController(
+        RaceDayDbContext context,
+        IConfiguration configuration)
     {
         _context = context;
+        _configuration = configuration;
         _passwordHasher = new PasswordHasher<User>();
     }
 
@@ -74,6 +81,96 @@ public class AuthController : ControllerBase
             user.Surname,
             user.Email,
             user.Role
+        });
+    }
+
+    /// <summary>
+    /// Authenticates a user and returns a JWT access token.
+    /// </summary>
+    [HttpPost("login")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Login(
+        [FromBody] LoginRequest request)
+    {
+        var email = request.Email.Trim().ToLowerInvariant();
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Email.ToLower() == email);
+
+        if (user == null)
+        {
+            return Unauthorized(new
+            {
+                message = "Invalid email or password."
+            });
+        }
+
+        var verificationResult = _passwordHasher.VerifyHashedPassword(
+            user,
+            user.PasswordHash,
+            request.Password);
+
+        if (verificationResult == PasswordVerificationResult.Failed)
+        {
+            return Unauthorized(new
+            {
+                message = "Invalid email or password."
+            });
+        }
+
+        var jwtKey = _configuration["Jwt:Key"]
+            ?? throw new InvalidOperationException(
+                "JWT signing key is missing.");
+
+        var jwtIssuer = _configuration["Jwt:Issuer"]
+            ?? throw new InvalidOperationException(
+                "JWT issuer is missing.");
+
+        var jwtAudience = _configuration["Jwt:Audience"]
+            ?? throw new InvalidOperationException(
+                "JWT audience is missing.");
+
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, user.UserID.ToString()),
+            new(JwtRegisteredClaimNames.Email, user.Email),
+            new(ClaimTypes.Name, $"{user.FirstName} {user.Surname}"),
+            new(ClaimTypes.Role, user.Role),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+        var key = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(jwtKey));
+
+        var credentials = new SigningCredentials(
+            key,
+            SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            issuer: jwtIssuer,
+            audience: jwtAudience,
+            claims: claims,
+            expires: DateTime.UtcNow.AddHours(1),
+            signingCredentials: credentials);
+
+        var accessToken = new JwtSecurityTokenHandler()
+            .WriteToken(token);
+
+        return Ok(new
+        {
+            message = "Login successful.",
+            accessToken,
+            tokenType = "Bearer",
+            expiresIn = 3600,
+            user = new
+            {
+                user.UserID,
+                user.FirstName,
+                user.Surname,
+                user.Email,
+                user.Role
+            }
         });
     }
 }
