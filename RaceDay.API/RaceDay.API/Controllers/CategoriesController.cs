@@ -128,4 +128,78 @@ public class CategoriesController : ControllerBase
             category.CategoryName
         });
     }
+
+    /// <summary>
+    /// Updates a category belonging to an event owned by the Organiser.
+    /// </summary>
+    [HttpPut("{categoryId:int}")]
+    [Authorize(Roles = "Organiser")]
+    public async Task<IActionResult> UpdateCategory(
+        int categoryId,
+        [FromBody] CategoryCreateRequest request)
+    {
+        var userIdClaim = User.FindFirst(
+            ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var organiserId))
+        {
+            return Unauthorized(new
+            {
+                message = "The authenticated Organiser ID could not be determined."
+            });
+        }
+
+        var category = await _context.Categories
+            .Include(c => c.Event)
+            .FirstOrDefaultAsync(c => c.CategoryID == categoryId);
+
+        if (category == null)
+        {
+            return NotFound(new
+            {
+                message = "Category not found."
+            });
+        }
+
+        if (category.Event.OrganiserID != organiserId)
+        {
+            return Forbid();
+        }
+
+        var categoryName = request.CategoryName.Trim();
+
+        if (string.IsNullOrWhiteSpace(categoryName))
+        {
+            return BadRequest(new
+            {
+                message = "Category name is required."
+            });
+        }
+
+        var duplicateExists = await _context.Categories
+            .AnyAsync(c =>
+                c.EventID == category.EventID &&
+                c.CategoryName == categoryName &&
+                c.CategoryID != categoryId);
+
+        if (duplicateExists)
+        {
+            return Conflict(new
+            {
+                message = "This category already exists for the event."
+            });
+        }
+
+        category.CategoryName = categoryName;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Category updated successfully.",
+            category.CategoryID,
+            category.EventID,
+            category.CategoryName
+        });
+    }
 }
