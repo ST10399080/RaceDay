@@ -202,4 +202,56 @@ public class CategoriesController : ControllerBase
             category.CategoryName
         });
     }
+
+    /// <summary>
+    /// Deletes a category belonging to an event owned by the Organiser.
+    /// </summary>
+    [HttpDelete("{categoryId:int}")]
+    [Authorize(Roles = "Organiser")]
+    public async Task<IActionResult> DeleteCategory(int categoryId)
+    {
+        var userIdClaim = User.FindFirst(
+            ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var organiserId))
+        {
+            return Unauthorized(new
+            {
+                message = "The authenticated Organiser ID could not be determined."
+            });
+        }
+
+        var category = await _context.Categories
+            .Include(c => c.Event)
+            .FirstOrDefaultAsync(c => c.CategoryID == categoryId);
+
+        if (category == null)
+        {
+            return NotFound(new
+            {
+                message = "Category not found."
+            });
+        }
+
+        if (category.Event.OrganiserID != organiserId)
+        {
+            return Forbid();
+        }
+
+        var hasEnrolments = await _context.Enrolments
+            .AnyAsync(e => e.CategoryID == categoryId);
+
+        if (hasEnrolments)
+        {
+            return Conflict(new
+            {
+                message = "This category cannot be deleted because participants are enrolled in it."
+            });
+        }
+
+        _context.Categories.Remove(category);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
 }
