@@ -90,4 +90,31 @@ public class UnitTest1
             validationResults,
             result => result.MemberNames.Contains("CategoryName"));
     }
+
+    [Fact]
+    public void EnrolmentCreateRequest_InvalidEventID_FailsValidation()
+    {
+        // Arrange
+        var request = new EnrolmentCreateRequest
+        {
+            EventID = 0,
+            CategoryID = 2
+        };
+
+        var validationResults = new List<ValidationResult>();
+        var validationContext = new ValidationContext(request);
+
+        // Act
+        var isValid = Validator.TryValidateObject(
+            request,
+            validationContext,
+            validationResults,
+            validateAllProperties: true);
+
+        // Assert
+        Assert.False(isValid);
+        Assert.Contains(
+            validationResults,
+            result => result.MemberNames.Contains("EventID"));
+    }
 }
