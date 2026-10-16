@@ -2,6 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RaceDay.API.Data;
+using System.Security.Claims;
+using RaceDay.API.Models;
+using RaceDay.API.Models.DTOs;
 
 namespace RaceDay.API.Controllers;
 
@@ -42,6 +45,7 @@ public class EventsController : ControllerBase
         return Ok(events);
     }
 
+
     /// <summary>
     /// Creates a new RaceDay event.
     /// Only Organisers can create events.
@@ -49,27 +53,45 @@ public class EventsController : ControllerBase
     [HttpPost]
     [Authorize(Roles = "Organiser")]
     public async Task<IActionResult> CreateEvent(
-        [FromBody] RaceDay.API.Models.Event newEvent)
+        [FromBody] EventCreateRequest request)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
 
+        var userIdClaim = User.FindFirst(
+            ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var organiserId))
+        {
+            return Unauthorized(new
+            {
+                message = "The authenticated Organiser ID could not be determined."
+            });
+        }
+
         var organiserExists = await _context.Users
             .AnyAsync(u =>
-                u.UserID == newEvent.OrganiserID &&
+                u.UserID == organiserId &&
                 u.Role == "Organiser");
 
         if (!organiserExists)
         {
-            return BadRequest(new
-            {
-                message = "The specified Organiser does not exist."
-            });
+            return Forbid();
         }
 
-        newEvent.EventID = 0;
+        var newEvent = new RaceDay.API.Models.Event
+        {
+            OrganiserID = organiserId,
+            EventName = request.EventName.Trim(),
+            Description = request.Description.Trim(),
+            EventDate = request.EventDate,
+            Location = request.Location.Trim(),
+            Distance = request.Distance,
+            EventType = request.EventType.Trim(),
+            BannerImageURL = request.BannerImageURL
+        };
 
         _context.Events.Add(newEvent);
         await _context.SaveChangesAsync();
@@ -77,6 +99,17 @@ public class EventsController : ControllerBase
         return CreatedAtAction(
             nameof(GetEvents),
             new { id = newEvent.EventID },
-            newEvent);
+            new
+            {
+                newEvent.EventID,
+                newEvent.OrganiserID,
+                newEvent.EventName,
+                newEvent.Description,
+                newEvent.EventDate,
+                newEvent.Location,
+                newEvent.Distance,
+                newEvent.EventType,
+                newEvent.BannerImageURL
+            });
     }
 }

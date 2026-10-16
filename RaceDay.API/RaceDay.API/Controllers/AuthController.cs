@@ -137,6 +137,7 @@ public class AuthController : ControllerBase
             new(JwtRegisteredClaimNames.Email, user.Email),
             new(ClaimTypes.Name, $"{user.FirstName} {user.Surname}"),
             new(ClaimTypes.Role, user.Role),
+            new(ClaimTypes.NameIdentifier, user.UserID.ToString()),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
