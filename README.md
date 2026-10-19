@@ -323,7 +323,7 @@ Tests include:
 📺 YouTube:
 
 * Part 1:
-* Part 2:
+* Part 2: https://youtu.be/sfZG8eOkC5M
 * POE:
 
 ---
