@@ -1,4 +1,7 @@
 ﻿using System.Net.Http.Json;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using RaceDay.MVC.Models;
 
@@ -28,43 +31,96 @@ public class AccountController : Controller
             return View(model);
         }
 
-        var client = _httpClientFactory.CreateClient("RaceDayAPI");
+        try
+        {
+            var client = _httpClientFactory.CreateClient("RaceDayAPI");
 
-        var response = await client.PostAsJsonAsync(
-            "api/Auth/login",
-            new
+            var response = await client.PostAsJsonAsync(
+                "api/Auth/login",
+                new
+                {
+                    model.Email,
+                    model.Password
+                });
+
+            if (!response.IsSuccessStatusCode)
             {
-                model.Email,
-                model.Password
-            });
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Invalid email or password.");
 
-        if (!response.IsSuccessStatusCode)
+                return View(model);
+            }
+
+            var loginResponse =
+                await response.Content.ReadFromJsonAsync<LoginResponse>();
+
+            if (loginResponse?.User == null ||
+                string.IsNullOrWhiteSpace(loginResponse.AccessToken))
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "The API returned an invalid login response.");
+
+                return View(model);
+            }
+
+            var user = loginResponse.User;
+
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.NameIdentifier, user.UserID.ToString()),
+                new(ClaimTypes.Name, $"{user.FirstName} {user.Surname}"),
+                new(ClaimTypes.Email, user.Email),
+                new(ClaimTypes.Role, user.Role)
+            };
+
+            var identity = new ClaimsIdentity(
+                claims,
+                CookieAuthenticationDefaults.AuthenticationScheme);
+
+            var principal = new ClaimsPrincipal(identity);
+
+            var properties = new AuthenticationProperties
+            {
+                IsPersistent = false,
+                AllowRefresh = false
+            };
+
+            // Keep the API token server-side for later authenticated API calls.
+            properties.StoreTokens(
+            [
+                new AuthenticationToken
+                {
+                    Name = "access_token",
+                    Value = loginResponse.AccessToken
+                }
+            ]);
+
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                principal,
+                properties);
+
+            return RedirectToAction("Index", "Home");
+        }
+        catch (HttpRequestException)
         {
             ModelState.AddModelError(
                 string.Empty,
-                "Invalid email or password.");
+                "Could not connect to the RaceDay API. Make sure the API is running.");
 
             return View(model);
         }
+    }
 
-        var loginResponse =
-            await response.Content.ReadFromJsonAsync<LoginResponse>();
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Logout()
+    {
+        await HttpContext.SignOutAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme);
 
-        if (loginResponse == null ||
-            string.IsNullOrWhiteSpace(loginResponse.AccessToken) ||
-            loginResponse.User == null)
-        {
-            ModelState.AddModelError(
-                string.Empty,
-                "The API returned an invalid login response.");
-
-            return View(model);
-        }
-
-        // Temporary confirmation while we implement cookie authentication.
-        // Do not display or expose the JWT to the browser.
-        return Content(
-            $"API login successful for {loginResponse.User.FirstName}. " +
-            "MVC session authentication has not been configured yet.");
+        return RedirectToAction("Login");
     }
 }
