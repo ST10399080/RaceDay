@@ -3,6 +3,30 @@
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-4">
+        Welcome, @User.Identity?.Name!
+    </h1>
+
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <p>You are signed in to RaceDay.</p>
+
+        @if (User.IsInRole("Organiser"))
+        {
+            <p>Your role: Organiser</p>
+        }
+        else if (User.IsInRole("Participant"))
+        {
+            <p>Your role: Participant</p>
+        }
+        else
+        {
+            <p>Your account does not have a recognised RaceDay role.</p>
+        }
+    }
+    else
+    {
+        <p>You are not signed in.</p>
+        <a asp-controller="Account" asp-action="Login">Log in</a>
+    }
 </div>
