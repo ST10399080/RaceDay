@@ -1,12 +1,11 @@
 -- Creating Database RaceDay
-IF DB_ID('RaceDay') IS NULL
+IF DB_ID('RaceDayDb') IS NULL
 BEGIN
-    CREATE DATABASE RaceDay;
+    CREATE DATABASE RaceDayDb;
 END;
 GO
 
---Using RaceDay Database
-USE RaceDay;
+USE RaceDayDb;
 GO
 
 -- Drop Existing Tables
