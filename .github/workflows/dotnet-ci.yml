@@ -32,4 +32,8 @@ jobs:
         run: dotnet build RaceDay.API/RaceDay.API.sln --configuration Release --no-restore
 
       - name: Run unit tests
+        env:
+          Jwt__Key: "RaceDay_Test_Key_12345678901234567890123456789012"
+          Jwt__Issuer: "RaceDay.Tests"
+          Jwt__Audience: "RaceDay.Tests"
         run: dotnet test RaceDay.API/RaceDay.API.sln --configuration Release --no-build --logger "console;verbosity=normal"
