@@ -1,8 +1,13 @@
-﻿using RaceDay.API.Models.DTOs;
-using System.ComponentModel.DataAnnotations;
-using System.Net.Http.Json;
-using System.Net.Http.Headers;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using RaceDay.API.Models.DTOs;
 using RaceDay.API.Tests;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Security.Claims;
 
 namespace RaceDay.API.Tests;
 
@@ -928,9 +933,14 @@ public class UnitTest1
                 Password = password
             });
 
-        Assert.Equal(
-            System.Net.HttpStatusCode.Created,
-            createA.StatusCode);
+        var createAContent = await createA.Content.ReadAsStringAsync();
+
+        Console.WriteLine($"Create Organiser A: {createA.StatusCode}");
+        Console.WriteLine(createAContent);
+
+        Assert.True(
+    createA.StatusCode == System.Net.HttpStatusCode.Created,
+    $"Create Organiser A failed: {createA.StatusCode}. Response: {createAContent}");
 
         // Log in as Organiser A
         var loginA = await client.PostAsJsonAsync(
@@ -946,6 +956,47 @@ public class UnitTest1
             new System.Net.Http.Headers.AuthenticationHeaderValue(
                 "Bearer", tokenA.AccessToken);
 
+        var handler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+        var decodedToken = handler.ReadJwtToken(tokenA.AccessToken);
+
+        var jwtConfig = factory.Services
+    .GetRequiredService<IConfiguration>();
+
+        var validationParameters =
+            new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = jwtConfig["Jwt:Issuer"],
+
+                ValidateAudience = true,
+                ValidAudience = jwtConfig["Jwt:Audience"],
+
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey =
+                    new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
+                        System.Text.Encoding.UTF8.GetBytes(
+                            jwtConfig["Jwt:Key"]!)),
+
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.FromMinutes(1)
+            };
+
+        string tokenValidationResult;
+
+        try
+        {
+            handler.ValidateToken(
+                tokenA.AccessToken,
+                validationParameters,
+                out _);
+
+            tokenValidationResult = "PASSED";
+        }
+        catch (Exception ex)
+        {
+            tokenValidationResult = $"{ex.GetType().Name}: {ex.Message}";
+        }
+
         // Organiser A creates an event
         var createEvent = await client.PostAsJsonAsync(
             "/api/Events",
@@ -960,9 +1011,26 @@ public class UnitTest1
                 BannerImageURL = (string?)null
             });
 
-        Assert.Equal(
-            System.Net.HttpStatusCode.Created,
-            createEvent.StatusCode);
+        var authFailure = createEvent.Headers.TryGetValues(
+    "X-Test-Auth-Failure", out var values)
+        ? string.Join("; ", values)
+        : "No authentication exception header returned";
+
+        var createEventContent =
+    await createEvent.Content.ReadAsStringAsync();
+
+        Console.WriteLine($"Create Event: {createEvent.StatusCode}");
+        Console.WriteLine(createEventContent);
+
+        Assert.True(
+    createEvent.StatusCode == System.Net.HttpStatusCode.Created,
+    $"Create Event failed: {createEvent.StatusCode}. " +
+    $"Manual JWT validation: {tokenValidationResult}. " +
+    $"Authentication exception: {authFailure}. " + 
+    $"Token role: {decodedToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value}. " +
+    $"Issuer: {decodedToken.Issuer}. " +
+    $"Audience: {string.Join(", ", decodedToken.Audiences)}. " +
+    $"Response: {createEventContent}");
 
         var createdEvent = await createEvent.Content
             .ReadFromJsonAsync<EventCreationResponse>();
@@ -1000,6 +1068,19 @@ public class UnitTest1
         client.DefaultRequestHeaders.Authorization =
             new System.Net.Http.Headers.AuthenticationHeaderValue(
                 "Bearer", tokenB.AccessToken);
+
+        Console.WriteLine(
+    $"Token role: {decodedToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value}");
+
+        var config = factory.Services.GetRequiredService<
+            Microsoft.Extensions.Configuration.IConfiguration>();
+
+        Console.WriteLine($"Token issuer: {decodedToken.Issuer}");
+        Console.WriteLine($"Token audience: {string.Join(", ", decodedToken.Audiences)}");
+        Console.WriteLine($"Expected issuer: {config["Jwt:Issuer"]}");
+        Console.WriteLine($"Expected audience: {config["Jwt:Audience"]}");
+        Console.WriteLine($"Token has signing key: {decodedToken.SignatureAlgorithm}");
+        Console.WriteLine($"Authorization scheme: {client.DefaultRequestHeaders.Authorization?.Scheme}");
 
         // Organiser B attempts to update Organiser A's event
         var updateResponse = await client.PutAsJsonAsync(
@@ -1072,6 +1153,11 @@ public class UnitTest1
                 EventType = "Walk",
                 BannerImageURL = (string?)null
             });
+
+        var authFailure = createEvent.Headers.TryGetValues(
+            "X-Test-Auth-Failure", out var values)
+               ? string.Join("; ", values)
+               : "No authentication exception header returned";
 
         Assert.Equal(
             System.Net.HttpStatusCode.Created,
@@ -1174,6 +1260,11 @@ public class UnitTest1
                 EventType = "Run",
                 BannerImageURL = (string?)null
             });
+
+        var authFailure = createEvent.Headers.TryGetValues(
+    "X-Test-Auth-Failure", out var values)
+        ? string.Join("; ", values)
+        : "No authentication exception header returned";
 
         Assert.Equal(
             System.Net.HttpStatusCode.Created,
