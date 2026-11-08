@@ -20,3 +20,77 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+/* ========================================
+   RACEDAY BRAND THEME
+======================================== */
+
+:root {
+    --raceday-blue: #1051BC;
+    --raceday-green: #10A66B;
+    --raceday-orange: #F47716;
+    --raceday-navy: #1B2C3D;
+    --raceday-light: #F4F7FB;
+}
+
+/* General application styling */
+
+body {
+    background-color: var(--raceday-light);
+    color: var(--raceday-navy);
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* Navigation bar */
+
+.raceday-navbar {
+    background-color: #FFFFFF;
+    border-bottom: 3px solid var(--raceday-blue);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.raceday-brand-logo {
+    height: 55px;
+    width: auto;
+    max-width: 190px;
+    object-fit: contain;
+}
+
+/* Navigation links */
+
+.navbar .nav-link {
+    color: var(--raceday-navy);
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
+
+    .navbar .nav-link:hover {
+        color: var(--raceday-blue);
+    }
+
+/* Primary buttons */
+
+.btn-raceday {
+    background-color: var(--raceday-blue);
+    border-color: var(--raceday-blue);
+    color: #FFFFFF;
+    font-weight: 600;
+}
+
+    .btn-raceday:hover {
+        background-color: #0B3F94;
+        border-color: #0B3F94;
+        color: #FFFFFF;
+    }
+
+/* Success and warning statuses */
+
+.status-confirmed {
+    background-color: #D9F5E8;
+    color: #087443;
+}
+
+.status-pending {
+    background-color: #FFF0D9;
+    color: #A65300;
+}
