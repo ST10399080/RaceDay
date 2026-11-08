@@ -95,6 +95,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+// Serve uploaded files from wwwroot.
+app.UseStaticFiles();
+
 // Authentication must run before authorization.
 app.UseAuthentication();
 app.UseAuthorization();
