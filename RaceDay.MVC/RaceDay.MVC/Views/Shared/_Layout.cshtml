@@ -41,6 +41,27 @@
 
                         @if (User.Identity?.IsAuthenticated == true)
                         {
+                            @if (User.IsInRole("Organiser"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link"
+                                       asp-controller="Organiser"
+                                       asp-action="Dashboard">
+                                        Organiser Dashboard
+                                    </a>
+                                </li>
+                            }
+
+                            @if (User.IsInRole("Participant"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link"
+                                       asp-controller="Participant"
+                                       asp-action="Dashboard">
+                                        Participant Dashboard
+                                    </a>
+                                </li>
+                            }
                             <li class="nav-item">
                                 <span class="nav-link text-dark">
                                     Hello, @User.Identity.Name
