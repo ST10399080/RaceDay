@@ -8,6 +8,8 @@ using RaceDay.API.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddScoped<RaceDay.API.Services.FileStorageService>();
+
 var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection");
 
