@@ -127,7 +127,7 @@ public class EventsController : ControllerBase
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> UploadEventBanner(
         int id,
-        [FromForm] IFormFile file)
+        IFormFile file)
     {
         var userIdClaim = User.FindFirst(
             ClaimTypes.NameIdentifier)?.Value;
