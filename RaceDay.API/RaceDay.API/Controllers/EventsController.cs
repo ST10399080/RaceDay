@@ -5,6 +5,7 @@ using RaceDay.API.Data;
 using System.Security.Claims;
 using RaceDay.API.Models;
 using RaceDay.API.Models.DTOs;
+using RaceDay.API.Services;
 
 namespace RaceDay.API.Controllers;
 
@@ -13,10 +14,13 @@ namespace RaceDay.API.Controllers;
 public class EventsController : ControllerBase
 {
     private readonly RaceDayDbContext _context;
-
-    public EventsController(RaceDayDbContext context)
+    private readonly FileStorageService _fileStorageService;
+    public EventsController(
+    RaceDayDbContext context,
+    FileStorageService fileStorageService)
     {
         _context = context;
+        _fileStorageService = fileStorageService;
     }
 
     /// <summary>
@@ -111,6 +115,69 @@ public class EventsController : ControllerBase
                 newEvent.EventType,
                 newEvent.BannerImageURL
             });
+    }
+
+
+    /// <summary>
+    /// Uploads or replaces an event banner image.
+    /// Only the Organiser who owns the event can upload its banner.
+    /// </summary>
+    [HttpPost("{id:int}/banner")]
+    [Authorize(Roles = "Organiser")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UploadEventBanner(
+        int id,
+        [FromForm] IFormFile file)
+    {
+        var userIdClaim = User.FindFirst(
+            ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var organiserId))
+        {
+            return Unauthorized(new
+            {
+                message = "The authenticated Organiser ID could not be determined."
+            });
+        }
+
+        var existingEvent = await _context.Events
+            .FirstOrDefaultAsync(e => e.EventID == id);
+
+        if (existingEvent == null)
+        {
+            return NotFound(new
+            {
+                message = "Event not found."
+            });
+        }
+
+        if (existingEvent.OrganiserID != organiserId)
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            var imageUrl = await _fileStorageService.SaveEventImageAsync(file);
+
+            existingEvent.BannerImageURL = imageUrl;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Event banner uploaded successfully.",
+                existingEvent.EventID,
+                existingEvent.BannerImageURL
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new
+            {
+                message = ex.Message
+            });
+        }
     }
 
     /// <summary>
