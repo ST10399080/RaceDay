@@ -14,4 +14,8 @@ public class OrganiserController : Controller
     {
         return View();
     }
+    public IActionResult CreateEvent()
+    {
+        return View();
+    }
 }
