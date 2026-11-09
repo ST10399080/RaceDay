@@ -10,4 +10,8 @@ public class OrganiserController : Controller
     {
         return View();
     }
+    public IActionResult Events()
+    {
+        return View();
+    }
 }
