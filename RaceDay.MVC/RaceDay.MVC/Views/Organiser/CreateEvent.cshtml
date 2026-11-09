@@ -1,0 +1,135 @@
+﻿@model RaceDay.MVC.Models.CreateEventViewModel
+
+@{
+    ViewData["Title"] = "Create Event";
+}
+
+<div class="container py-4">
+    <div class="mb-4">
+        <a asp-controller="Organiser"
+           asp-action="Events"
+           class="text-decoration-none">
+            &larr; Back to Events
+        </a>
+
+        <h1 class="mt-3">Create New Event</h1>
+        <p class="text-muted">
+            Enter the details below to create a new RaceDay event.
+        </p>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <form asp-controller="Organiser"
+                  asp-action="CreateEvent"
+                  method="post"
+                  enctype="multipart/form-data">
+
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly"
+                     class="alert alert-danger"></div>
+
+                <div class="mb-3">
+                    <label asp-for="EventName" class="form-label"></label>
+                    <input asp-for="EventName" class="form-control"
+                           placeholder="e.g. Johannesburg City Marathon" />
+                    <span asp-validation-for="EventName"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label"></label>
+                    <textarea asp-for="Description"
+                              class="form-control"
+                              rows="4"
+                              placeholder="Describe the event..."></textarea>
+                    <span asp-validation-for="Description"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="EventDate" class="form-label"></label>
+                        <input asp-for="EventDate"
+                               type="date"
+                               class="form-control" />
+                        <span asp-validation-for="EventDate"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Location" class="form-label"></label>
+                        <input asp-for="Location"
+                               class="form-control"
+                               placeholder="e.g. Sandton, Johannesburg" />
+                        <span asp-validation-for="Location"
+                              class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Distance" class="form-label"></label>
+                        <input asp-for="Distance"
+                               type="number"
+                               step="0.1"
+                               min="0.1"
+                               max="1000"
+                               class="form-control"
+                               placeholder="e.g. 10" />
+                        <span asp-validation-for="Distance"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="EventType" class="form-label"></label>
+                        <select asp-for="EventType" class="form-select">
+                            <option value="">Select event type</option>
+                            <option value="Running">Running</option>
+                            <option value="Cycling">Cycling</option>
+                            <option value="Swimming">Swimming</option>
+                            <option value="Triathlon">Triathlon</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <span asp-validation-for="EventType"
+                              class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="BannerImage" class="form-label"></label>
+                    <input asp-for="BannerImage"
+                           type="file"
+                           class="form-control"
+                           accept=".jpg,.jpeg,.png,.webp" />
+                    <div class="form-text">
+                        Optional. Accepted formats: JPG, PNG and WEBP.
+                        Maximum file size: 5 MB.
+                    </div>
+                    <span asp-validation-for="BannerImage"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-raceday">
+                        Create Event
+                    </button>
+
+                    <a asp-controller="Organiser"
+                       asp-action="Events"
+                       class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+
