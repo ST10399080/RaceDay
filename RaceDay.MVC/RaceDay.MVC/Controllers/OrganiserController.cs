@@ -157,4 +157,147 @@ public class OrganiserController : Controller
 
         return RedirectToAction(nameof(Events));
     }
+
+    [HttpGet]
+    public async Task<IActionResult> EditEvent(int id)
+    {
+        var accessToken = await HttpContext.GetTokenAsync("access_token");
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var client = _httpClientFactory.CreateClient("RaceDayAPI");
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await client.GetAsync("api/Events");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            TempData["ErrorMessage"] = "Could not retrieve the event.";
+            return RedirectToAction(nameof(Events));
+        }
+
+        var events = await response.Content.ReadFromJsonAsync<
+            List<OrganiserEventViewModel>>() ?? new List<OrganiserEventViewModel>();
+
+        var organiserId = User.FindFirst(
+            System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        var selectedEvent = events.FirstOrDefault(e =>
+            e.EventID == id &&
+            e.OrganiserID.ToString() == organiserId);
+
+        if (selectedEvent == null)
+        {
+            TempData["ErrorMessage"] =
+                "Event not found or you do not have permission to edit it.";
+
+            return RedirectToAction(nameof(Events));
+        }
+
+        var model = new EditEventViewModel
+        {
+            EventID = selectedEvent.EventID,
+            EventName = selectedEvent.EventName,
+            Description = selectedEvent.Description,
+            EventDate = selectedEvent.EventDate,
+            Location = selectedEvent.Location,
+            Distance = selectedEvent.Distance,
+            EventType = selectedEvent.EventType
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditEvent(
+        int id,
+        EditEventViewModel model)
+    {
+        if (id != model.EventID)
+        {
+            return BadRequest();
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var accessToken = await HttpContext.GetTokenAsync("access_token");
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var client = _httpClientFactory.CreateClient("RaceDayAPI");
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var eventRequest = new
+        {
+            model.EventName,
+            model.Description,
+            model.EventDate,
+            model.Location,
+            model.Distance,
+            model.EventType,
+            BannerImageURL = (string?)null
+        };
+
+        var response = await client.PutAsJsonAsync(
+            $"api/Events/{id}",
+            eventRequest);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            ModelState.AddModelError(
+                string.Empty,
+                "The event could not be updated. Please try again.");
+
+            return View(model);
+        }
+
+        if (model.BannerImage != null &&
+            model.BannerImage.Length > 0)
+        {
+            using var multipartContent = new MultipartFormDataContent();
+
+            await using var imageStream =
+                model.BannerImage.OpenReadStream();
+
+            using var imageContent = new StreamContent(imageStream);
+
+            imageContent.Headers.ContentType =
+                new MediaTypeHeaderValue(model.BannerImage.ContentType);
+
+            multipartContent.Add(
+                imageContent,
+                "file",
+                model.BannerImage.FileName);
+
+            var uploadResponse = await client.PostAsync(
+                $"api/Events/{id}/banner",
+                multipartContent);
+
+            if (!uploadResponse.IsSuccessStatusCode)
+            {
+                TempData["ErrorMessage"] =
+                    "Event details were updated, but the banner could not be replaced.";
+
+                return RedirectToAction(nameof(Events));
+            }
+        }
+
+        TempData["SuccessMessage"] = "Event updated successfully!";
+
+        return RedirectToAction(nameof(Events));
+    }
 }

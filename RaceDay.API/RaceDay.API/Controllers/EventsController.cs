@@ -223,7 +223,10 @@ public class EventsController : ControllerBase
         existingEvent.Location = request.Location.Trim();
         existingEvent.Distance = request.Distance;
         existingEvent.EventType = request.EventType.Trim();
-        existingEvent.BannerImageURL = request.BannerImageURL;
+        if (request.BannerImageURL != null)
+        {
+            existingEvent.BannerImageURL = request.BannerImageURL;
+        }
 
         await _context.SaveChangesAsync();
 
