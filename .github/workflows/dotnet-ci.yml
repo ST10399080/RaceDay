@@ -25,11 +25,17 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
-      - name: Restore dependencies
+      - name: Restore API dependencies
         run: dotnet restore RaceDay.API/RaceDay.API.sln
 
-      - name: Build solution
+      - name: Restore MVC dependencies
+        run: dotnet restore RaceDay.MVC/RaceDay.MVC/RaceDay.MVC.csproj
+
+      - name: Build API solution
         run: dotnet build RaceDay.API/RaceDay.API.sln --configuration Release --no-restore
+
+      - name: Build MVC project
+        run: dotnet build RaceDay.MVC/RaceDay.MVC/RaceDay.MVC.csproj --configuration Release --no-restore
 
       - name: Run unit tests
         env:
