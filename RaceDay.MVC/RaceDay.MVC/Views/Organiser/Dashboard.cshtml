@@ -24,7 +24,7 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <p class="text-muted mb-1">Events Created</p>
-                            <h3 class="fw-bold mb-0">—</h3>
+                            <h3 class="fw-bold mb-0">@Model.Count</h3>
                         </div>
                         <div class="fs-2">🏁</div>
                     </div>
@@ -58,7 +58,7 @@
                     <div class="d-flex justify-content-between">
                         <div>
                             <p class="text-muted mb-1">Upcoming Events</p>
-                            <h3 class="fw-bold mb-0">—</h3>
+                            <h3 class="fw-bold mb-0">@upcomingEvents</h3>
                         </div>
                         <div class="fs-2">📅</div>
                     </div>
@@ -77,9 +77,54 @@
         </div>
 
         <div class="card-body">
-            <p class="text-muted mb-0">
-                Your event summaries and upcoming race dates will appear here.
-            </p>
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Event</th>
+                                <th>Date</th>
+                                <th>Location</th>
+                                <th>Distance</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@item.EventName</td>
+                                    <td>@item.EventDate.ToString("dd MMM yyyy")</td>
+                                    <td>@item.Location</td>
+                                    <td>@item.Distance km</td>
+                                    <td>
+                                        @if (item.EventDate.Date >= today)
+                                        {
+                                            <span class="badge status-confirmed">
+                                                Upcoming
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">
+                                                Completed
+                                            </span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted mb-0">
+                    You haven't created any events yet.
+                </p>
+            }
+        </div>
         </div>
     </div>
 
