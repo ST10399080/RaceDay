@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Authentication;
+using RaceDay.MVC.Models;
 
 namespace RaceDay.MVC.Controllers;
 
@@ -205,5 +206,38 @@ public class ParticipantController : Controller
             "Your enrolment was submitted successfully. Your status is Pending.";
 
         return RedirectToAction(nameof(EventDetails), new { id = model.EventID });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> MyEnrolments()
+    {
+        var accessToken = await HttpContext.GetTokenAsync("access_token");
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var client = _httpClientFactory.CreateClient("RaceDayAPI");
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await client.GetAsync(
+            "api/Enrolments/my-enrolments");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            TempData["ErrorMessage"] =
+                "Could not retrieve your enrolments.";
+
+            return View(new List<ParticipantEnrolmentViewModel>());
+        }
+
+        var enrolments = await response.Content.ReadFromJsonAsync<
+            List<ParticipantEnrolmentViewModel>>()
+            ?? new List<ParticipantEnrolmentViewModel>();
+
+        return View(enrolments);
     }
 }

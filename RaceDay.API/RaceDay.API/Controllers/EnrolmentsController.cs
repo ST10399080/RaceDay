@@ -170,4 +170,52 @@ public class EnrolmentsController : ControllerBase
 
         return Ok(enrolments);
     }
+
+    /// <summary>
+    /// Returns enrolments belonging to the authenticated Participant.
+    /// </summary>
+    [HttpGet("my-enrolments")]
+    [Authorize(Roles = "Participant")]
+    public async Task<IActionResult> GetMyEnrolments()
+    {
+        var userIdClaim = User.FindFirst(
+            ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new
+            {
+                message = "The authenticated user ID could not be determined."
+            });
+        }
+
+        var participant = await _context.Participants
+            .FirstOrDefaultAsync(p => p.UserID == userId);
+
+        if (participant == null)
+        {
+            return NotFound(new
+            {
+                message = "Participant profile not found."
+            });
+        }
+
+        var enrolments = await _context.Enrolments
+            .AsNoTracking()
+            .Where(e => e.ParticipantID == participant.ParticipantID)
+            .Select(e => new
+            {
+                e.EnrolmentID,
+                e.EventID,
+                EventName = e.Event.EventName,
+                e.CategoryID,
+                CategoryName = e.Category.CategoryName,
+                e.EnrolmentDate,
+                e.Status
+            })
+            .OrderByDescending(e => e.EnrolmentDate)
+            .ToListAsync();
+
+        return Ok(enrolments);
+    }
 }
