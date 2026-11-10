@@ -38,11 +38,14 @@ public class OrganiserController : Controller
             TempData["ErrorMessage"] =
                 "Could not retrieve your events from the RaceDay API.";
 
+            ViewBag.TotalEnrolments = 0;
+
             return View(new List<OrganiserEventViewModel>());
         }
 
         var events = await response.Content.ReadFromJsonAsync<
-            List<OrganiserEventViewModel>>() ?? new List<OrganiserEventViewModel>();
+            List<OrganiserEventViewModel>>()
+            ?? new List<OrganiserEventViewModel>();
 
         var organiserId = User.FindFirst(
             System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -51,6 +54,29 @@ public class OrganiserController : Controller
             .Where(e => e.OrganiserID.ToString() == organiserId)
             .OrderBy(e => e.EventDate)
             .ToList();
+
+        var totalEnrolments = 0;
+
+        var enrolmentCounts = new Dictionary<int, int>();
+
+        foreach (var eventItem in events)
+        {
+            var enrolmentsResponse = await client.GetAsync(
+                $"api/Enrolments/event/{eventItem.EventID}");
+
+            if (enrolmentsResponse.IsSuccessStatusCode)
+            {
+                var enrolments = await enrolmentsResponse.Content.ReadFromJsonAsync<
+                    List<OrganiserEnrolmentViewModel>>()
+                    ?? new List<OrganiserEnrolmentViewModel>();
+
+                totalEnrolments += enrolments.Count;
+                enrolmentCounts[eventItem.EventID] = enrolments.Count;
+            }
+        }
+
+        ViewBag.TotalEnrolments = totalEnrolments;
+        ViewBag.EnrolmentCounts = enrolmentCounts;
 
         return View(events);
     }
@@ -363,5 +389,127 @@ public class OrganiserController : Controller
         TempData["SuccessMessage"] = "Event deleted successfully!";
 
         return RedirectToAction(nameof(Events));
+    }
+    public async Task<IActionResult> Enrolments(int id)
+    {
+        var accessToken = await HttpContext.GetTokenAsync("access_token");
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var client = _httpClientFactory.CreateClient("RaceDayAPI");
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await client.GetAsync(
+            $"api/Enrolments/event/{id}");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            TempData["ErrorMessage"] =
+                "Could not retrieve enrolments for this event.";
+
+            return RedirectToAction(nameof(Events));
+        }
+
+        var enrolments = await response.Content.ReadFromJsonAsync<
+            List<OrganiserEnrolmentViewModel>>()
+            ?? new List<OrganiserEnrolmentViewModel>();
+
+        ViewBag.EventID = id;
+
+        return View(enrolments);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateEnrolmentStatus(
+        int id, int eventId, string status)
+    {
+        if (status != "Approved" && status != "Rejected")
+        {
+            TempData["ErrorMessage"] = "Invalid enrolment status.";
+            return RedirectToAction(nameof(Enrolments), new { id = eventId });
+        }
+
+        var accessToken = await HttpContext.GetTokenAsync("access_token");
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var client = _httpClientFactory.CreateClient("RaceDayAPI");
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await client.PutAsJsonAsync(
+            $"api/Enrolments/{id}/status",
+            new { Status = status });
+
+        if (!response.IsSuccessStatusCode)
+        {
+            TempData["ErrorMessage"] =
+                "Could not update the enrolment status.";
+
+            return RedirectToAction(nameof(Enrolments), new { id = eventId });
+        }
+
+        TempData["SuccessMessage"] =
+            $"Enrolment successfully {status.ToLower()}.";
+
+        return RedirectToAction(nameof(Enrolments), new { id = eventId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RecordResult(
+    RecordResultViewModel model, int eventId)
+    {
+        if (!ModelState.IsValid)
+        {
+            TempData["ErrorMessage"] =
+                "Please provide a valid finishing position and time.";
+
+            return RedirectToAction(nameof(Enrolments), new { id = eventId });
+        }
+
+        var accessToken = await HttpContext.GetTokenAsync("access_token");
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var client = _httpClientFactory.CreateClient("RaceDayAPI");
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await client.PostAsJsonAsync(
+            "api/Results",
+            new
+            {
+                model.EnrolmentID,
+                model.Position,
+                model.FinishTime
+            });
+
+        if (!response.IsSuccessStatusCode)
+        {
+            TempData["ErrorMessage"] =
+                "Could not record the participant's result.";
+
+            return RedirectToAction(nameof(Enrolments), new { id = eventId });
+        }
+
+        TempData["SuccessMessage"] =
+            "Participant result recorded successfully.";
+
+        return RedirectToAction(nameof(Enrolments), new { id = eventId });
     }
 }

@@ -146,6 +146,13 @@
                                             Edit
                                         </a>
 
+                                        <a asp-controller="Organiser"
+                                           asp-action="Enrolments"
+                                           asp-route-id="@item.EventID"
+                                           class="btn btn-sm btn-outline-success">
+                                            View Enrolments
+                                        </a>
+
                                         <form asp-controller="Organiser"
                                               asp-action="DeleteEvent"
                                               asp-route-id="@item.EventID"

@@ -92,11 +92,12 @@
                             </a>
                             @if (isUpcoming)
                             {
-                                <button type="button"
-                                        class="btn btn-raceday w-100"
-                                        disabled>
-                                    Enrolment Coming Soon
-                                </button>
+                                <a asp-controller="Participant"
+                                   asp-action="EventDetails"
+                                   asp-route-id="@item.EventID"
+                                   class="btn btn-raceday">
+                                    View Event Details
+                                </a>
                             }
                             else
                             {

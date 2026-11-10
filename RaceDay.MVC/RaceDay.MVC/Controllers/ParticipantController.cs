@@ -37,15 +37,57 @@ public class ParticipantController : Controller
             TempData["ErrorMessage"] =
                 "Could not retrieve sporting events from the RaceDay API.";
 
-            return View(new List<RaceDay.MVC.Models.OrganiserEventViewModel>());
+            return View(new List<OrganiserEventViewModel>());
         }
 
         var events = await response.Content.ReadFromJsonAsync<
-            List<RaceDay.MVC.Models.OrganiserEventViewModel>>()
-            ?? new List<RaceDay.MVC.Models.OrganiserEventViewModel>();
+            List<OrganiserEventViewModel>>()
+            ?? new List<OrganiserEventViewModel>();
+
+        var today = DateTime.Today;
+
+        ViewBag.UpcomingRaces = events.Count(e => e.EventDate.Date >= today);
+        ViewBag.CompletedRaces = events.Count(e => e.EventDate.Date < today);
+
+        var enrolmentsResponse =
+            await client.GetAsync("api/Enrolments/my-enrolments");
+
+        if (enrolmentsResponse.IsSuccessStatusCode)
+        {
+            var enrolments = await enrolmentsResponse.Content.ReadFromJsonAsync<
+                List<ParticipantEnrolmentViewModel>>()
+                ?? new List<ParticipantEnrolmentViewModel>();
+
+            ViewBag.MyEnrolments = enrolments.Count;
+        }
+        else
+        {
+            ViewBag.MyEnrolments = 0;
+        }
+
+        // Retrieve the participant's results.
+        var resultsResponse =
+            await client.GetAsync("api/Results/my-results");
+
+        if (resultsResponse.IsSuccessStatusCode)
+        {
+            var results = await resultsResponse.Content.ReadFromJsonAsync<
+                List<ParticipantResultViewModel>>()
+                ?? new List<ParticipantResultViewModel>();
+
+            ViewBag.RecentResults = results
+                .OrderByDescending(r => r.EventDate)
+                .Take(5)
+                .ToList();
+        }
+        else
+        {
+            ViewBag.RecentResults =
+                new List<ParticipantResultViewModel>();
+        }
 
         events = events
-            .Where(e => e.EventDate.Date >= DateTime.Today)
+            .Where(e => e.EventDate.Date >= today)
             .OrderBy(e => e.EventDate)
             .ToList();
 

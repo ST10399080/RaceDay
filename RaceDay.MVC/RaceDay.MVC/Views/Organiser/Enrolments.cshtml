@@ -1,0 +1,184 @@
+﻿@model List<RaceDay.MVC.Models.OrganiserEnrolmentViewModel>
+
+@{
+    ViewData["Title"] = "Event Enrolments";
+}
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">Event Enrolments</h2>
+            <p class="text-muted mb-0">
+                View participants registered for this event.
+            </p>
+        </div>
+
+        <a asp-controller="Organiser"
+           asp-action="Events"
+           class="btn btn-outline-secondary">
+            Back to Events
+        </a>
+    </div>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h5 class="fw-bold mb-0">Registered Participants</h5>
+        </div>
+
+        <div class="card-body">
+
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Participant</th>
+                                <th>Category</th>
+                                <th>Enrolment Date</th>
+                                <th>Status</th>
+                                <th>Race Result</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var enrolment in Model)
+                            {
+                                <tr>
+                                    <td>@enrolment.ParticipantName</td>
+                                    <td>@enrolment.CategoryName</td>
+                                    <td>
+                                        @enrolment.EnrolmentDate.ToLocalTime()
+                                            .ToString("dd MMM yyyy")
+                                    </td>
+                                    <td>
+                                        @if (enrolment.Status == "Approved")
+                                        {
+                                            <span class="badge status-confirmed">Approved</span>
+                                        }
+                                        else if (enrolment.Status == "Rejected")
+                                        {
+                                            <span class="badge bg-danger">Rejected</span>
+                                        }
+                                        else if (enrolment.Status == "Pending")
+                                        {
+                                            <span class="badge status-pending">Pending</span>
+
+                                            <div class="mt-2">
+                                                <form asp-controller="Organiser"
+                                                      asp-action="UpdateEnrolmentStatus"
+                                                      method="post"
+                                                      class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@enrolment.EnrolmentID" />
+                                                    <input type="hidden" name="eventId" value="@ViewBag.EventID" />
+                                                    <input type="hidden" name="status" value="Approved" />
+
+                                                    <button type="submit"
+                                                            class="btn btn-sm btn-success">
+                                                        Approve
+                                                    </button>
+                                                </form>
+
+                                                <form asp-controller="Organiser"
+                                                      asp-action="UpdateEnrolmentStatus"
+                                                      method="post"
+                                                      class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@enrolment.EnrolmentID" />
+                                                    <input type="hidden" name="eventId" value="@ViewBag.EventID" />
+                                                    <input type="hidden" name="status" value="Rejected" />
+
+                                                    <button type="submit"
+                                                            class="btn btn-sm btn-outline-danger">
+                                                        Reject
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">@enrolment.Status</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (enrolment.Status == "Approved" && !enrolment.HasResult)
+                                        {
+                                            <form asp-controller="Organiser"
+                                                  asp-action="RecordResult"
+                                                  method="post">
+                                                @Html.AntiForgeryToken()
+
+                                                <input type="hidden"
+                                                       name="EnrolmentID"
+                                                       value="@enrolment.EnrolmentID" />
+
+                                                <input type="hidden"
+                                                       name="eventId"
+                                                       value="@ViewBag.EventID" />
+
+                                                <div class="mb-2">
+                                                    <input type="number"
+                                                           name="Position"
+                                                           class="form-control form-control-sm"
+                                                           placeholder="Position"
+                                                           min="1"
+                                                           required />
+                                                </div>
+
+                                                <div class="mb-2">
+                                                    <input type="time"
+                                                           name="FinishTime"
+                                                           class="form-control form-control-sm"
+                                                           step="1"
+                                                           required />
+                                                </div>
+
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-raceday">
+                                                    Record Result
+                                                </button>
+                                            </form>
+                                        }
+                                        else if (enrolment.HasResult)
+                                        {
+                                            <span class="badge status-confirmed">
+                                                Result Recorded
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Awaiting approval</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted mb-0">
+                    No participants have enrolled in this event yet.
+                </p>
+            }
+
+        </div>
+    </div>
+
+</div>

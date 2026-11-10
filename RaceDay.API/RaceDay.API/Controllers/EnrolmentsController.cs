@@ -164,7 +164,8 @@ public class EnrolmentsController : ControllerBase
                 e.CategoryID,
                 CategoryName = e.Category.CategoryName,
                 e.EnrolmentDate,
-                e.Status
+                e.Status,
+                HasResult = e.Result != null
             })
             .ToListAsync();
 
@@ -217,5 +218,54 @@ public class EnrolmentsController : ControllerBase
             .ToListAsync();
 
         return Ok(enrolments);
+    }
+
+    /// <summary>
+    /// Allows an Organiser to approve or reject an event enrolment.
+    /// </summary>
+    [HttpPut("{enrolmentId:int}/status")]
+    [Authorize(Roles = "Organiser")]
+    public async Task<IActionResult> UpdateEnrolmentStatus(
+        int enrolmentId,
+        [FromBody] EnrolmentStatusUpdateRequest request)
+    {
+        var userIdClaim = User.FindFirst(
+            ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(userIdClaim, out var organiserId))
+        {
+            return Unauthorized(new
+            {
+                message = "The authenticated Organiser ID could not be determined."
+            });
+        }
+
+        var enrolment = await _context.Enrolments
+            .Include(e => e.Event)
+            .FirstOrDefaultAsync(e => e.EnrolmentID == enrolmentId);
+
+        if (enrolment == null)
+        {
+            return NotFound(new
+            {
+                message = "Enrolment not found."
+            });
+        }
+
+        if (enrolment.Event.OrganiserID != organiserId)
+        {
+            return Forbid();
+        }
+
+        enrolment.Status = request.Status;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Enrolment status updated successfully.",
+            enrolment.EnrolmentID,
+            enrolment.Status
+        });
     }
 }
