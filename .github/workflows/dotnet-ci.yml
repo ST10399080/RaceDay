@@ -34,6 +34,9 @@ jobs:
       - name: Build solution
         run: dotnet build RaceDay.API/RaceDay.API.sln --configuration Release --no-restore
 
+      - name: Build MVC project
+        run: dotnet build RaceDay.MVC/RaceDay.MVC.csproj --configuration Release --no-restore
+
       - name: Run unit tests
         env:
           Jwt__Key: "RaceDay_Test_Key_12345678901234567890123456789012"
