@@ -28,6 +28,9 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore RaceDay.API/RaceDay.API.sln
 
+      - name: Restore MVC dependencies
+        run: dotnet restore RaceDay.MVC/RaceDay.MVC.csproj
+
       - name: Build solution
         run: dotnet build RaceDay.API/RaceDay.API.sln --configuration Release --no-restore
 
