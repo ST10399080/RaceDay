@@ -240,4 +240,85 @@ public class ParticipantController : Controller
 
         return View(enrolments);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> Profile()
+    {
+        var accessToken = await HttpContext.GetTokenAsync("access_token");
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var client = _httpClientFactory.CreateClient("RaceDayAPI");
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await client.GetAsync("api/Profile");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            TempData["ErrorMessage"] =
+                "Could not retrieve your profile.";
+
+            return View(new ParticipantProfileViewModel());
+        }
+
+        var profile = await response.Content.ReadFromJsonAsync<
+            ParticipantProfileViewModel>();
+
+        if (profile == null)
+        {
+            TempData["ErrorMessage"] =
+                "Your profile could not be loaded.";
+
+            return View(new ParticipantProfileViewModel());
+        }
+
+        return View(profile);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Profile(
+    ParticipantProfileViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View(model);
+        }
+
+        var accessToken = await HttpContext.GetTokenAsync("access_token");
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var client = _httpClientFactory.CreateClient("RaceDayAPI");
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await client.PutAsJsonAsync(
+            "api/Profile",
+            model);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorMessage = await response.Content.ReadAsStringAsync();
+
+            TempData["ErrorMessage"] =
+                "Profile update failed. " + errorMessage;
+
+            return View(model);
+        }
+
+        TempData["SuccessMessage"] =
+            "Your profile was updated successfully.";
+
+        return RedirectToAction(nameof(Profile));
+    }
 }
