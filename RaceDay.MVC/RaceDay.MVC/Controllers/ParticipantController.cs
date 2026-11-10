@@ -15,9 +15,40 @@ public class ParticipantController : Controller
     {
         _httpClientFactory = httpClientFactory;
     }
-    public IActionResult Dashboard()
+    public async Task<IActionResult> Dashboard()
     {
-        return View();
+        var accessToken = await HttpContext.GetTokenAsync("access_token");
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var client = _httpClientFactory.CreateClient("RaceDayAPI");
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await client.GetAsync("api/Events");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            TempData["ErrorMessage"] =
+                "Could not retrieve sporting events from the RaceDay API.";
+
+            return View(new List<RaceDay.MVC.Models.OrganiserEventViewModel>());
+        }
+
+        var events = await response.Content.ReadFromJsonAsync<
+            List<RaceDay.MVC.Models.OrganiserEventViewModel>>()
+            ?? new List<RaceDay.MVC.Models.OrganiserEventViewModel>();
+
+        events = events
+            .Where(e => e.EventDate.Date >= DateTime.Today)
+            .OrderBy(e => e.EventDate)
+            .ToList();
+
+        return View(events);
     }
 
     [HttpGet]
