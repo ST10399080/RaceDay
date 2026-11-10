@@ -1,9 +1,10 @@
-﻿using System.Net.Http.Json;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RaceDay.MVC.Models;
+using System.Net.Http.Json;
+using System.Security.Claims;
 
 namespace RaceDay.MVC.Controllers;
 
@@ -122,5 +123,11 @@ public class AccountController : Controller
             CookieAuthenticationDefaults.AuthenticationScheme);
 
         return RedirectToAction("Login");
+    }
+
+    [AllowAnonymous]
+    public IActionResult AccessDenied()
+    {
+        return View();
     }
 }
