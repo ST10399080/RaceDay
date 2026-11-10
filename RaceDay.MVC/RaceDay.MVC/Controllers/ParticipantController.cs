@@ -126,4 +126,84 @@ public class ParticipantController : Controller
 
         return View(selectedEvent);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> Enrol(int id)
+    {
+        var accessToken = await HttpContext.GetTokenAsync("access_token");
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var client = _httpClientFactory.CreateClient("RaceDayAPI");
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await client.GetAsync(
+            $"api/Categories/event/{id}");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            TempData["ErrorMessage"] =
+                "Could not retrieve categories for this event.";
+
+            return RedirectToAction(nameof(Events));
+        }
+
+        var categories = await response.Content.ReadFromJsonAsync<
+            List<RaceDay.MVC.Models.CategoryViewModel>>()
+            ?? new List<RaceDay.MVC.Models.CategoryViewModel>();
+
+        ViewBag.EventID = id;
+
+        return View(categories);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateEnrolment(
+    EnrolmentCreateViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            TempData["ErrorMessage"] =
+                "Please select a valid event category.";
+
+            return RedirectToAction(nameof(Enrol), new { id = model.EventID });
+        }
+
+        var accessToken = await HttpContext.GetTokenAsync("access_token");
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var client = _httpClientFactory.CreateClient("RaceDayAPI");
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await client.PostAsJsonAsync(
+            "api/Enrolments",
+            model);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorMessage = await response.Content.ReadAsStringAsync();
+
+            TempData["ErrorMessage"] =
+                "Enrolment failed. " + errorMessage;
+
+            return RedirectToAction(nameof(Enrol), new { id = model.EventID });
+        }
+
+        TempData["SuccessMessage"] =
+            "Your enrolment was submitted successfully. Your status is Pending.";
+
+        return RedirectToAction(nameof(EventDetails), new { id = model.EventID });
+    }
 }
