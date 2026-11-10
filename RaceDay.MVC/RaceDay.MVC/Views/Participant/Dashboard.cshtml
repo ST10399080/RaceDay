@@ -79,9 +79,38 @@
         </div>
 
         <div class="card-body">
-            <p class="text-muted mb-0">
-                Upcoming races and sporting events will appear here.
-            </p>
+            @if (Model.Any())
+            {
+                <div class="row g-3">
+                    @foreach (var item in Model.Take(3))
+                    {
+                        <div class="col-md-4">
+                            <div class="border rounded p-3 h-100">
+                                <h6 class="fw-bold">@item.EventName</h6>
+
+                                <p class="text-muted small mb-2">
+                                    @item.EventDate.ToString("dd MMM yyyy")
+                                </p>
+
+                                <p class="mb-2">
+                                    <strong>Location:</strong> @item.Location
+                                </p>
+
+                                <p class="mb-0">
+                                    <strong>Distance:</strong> @item.Distance km
+                                </p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="text-muted mb-0">
+                    There are currently no upcoming sporting events.
+                    Please check again later.
+                </p>
+            }
         </div>
 
     </div>

@@ -86,4 +86,44 @@ public class ParticipantController : Controller
 
         return View(events);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> EventDetails(int id)
+    {
+        var accessToken = await HttpContext.GetTokenAsync("access_token");
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var client = _httpClientFactory.CreateClient("RaceDayAPI");
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await client.GetAsync("api/Events");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            TempData["ErrorMessage"] =
+                "Could not retrieve event details.";
+
+            return RedirectToAction(nameof(Events));
+        }
+
+        var events = await response.Content.ReadFromJsonAsync<
+            List<RaceDay.MVC.Models.OrganiserEventViewModel>>()
+            ?? new List<RaceDay.MVC.Models.OrganiserEventViewModel>();
+
+        var selectedEvent = events.FirstOrDefault(e => e.EventID == id);
+
+        if (selectedEvent == null)
+        {
+            TempData["ErrorMessage"] = "The selected event could not be found.";
+            return RedirectToAction(nameof(Events));
+        }
+
+        return View(selectedEvent);
+    }
 }
