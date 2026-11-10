@@ -1,5 +1,10 @@
-﻿@{
+﻿@model List<RaceDay.MVC.Models.OrganiserEventViewModel>
+
+@{
     ViewData["Title"] = "Organiser Dashboard";
+
+    var today = DateTime.Today;
+    var upcomingEvents = Model.Count(e => e.EventDate.Date >= today);
 }
 
 <div class="container-fluid py-4">

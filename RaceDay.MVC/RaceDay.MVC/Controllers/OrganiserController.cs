@@ -17,9 +17,42 @@ public class OrganiserController : Controller
     {
         _httpClientFactory = httpClientFactory;
     }
-    public IActionResult Dashboard()
+    public async Task<IActionResult> Dashboard()
     {
-        return View();
+        var accessToken = await HttpContext.GetTokenAsync("access_token");
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var client = _httpClientFactory.CreateClient("RaceDayAPI");
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await client.GetAsync("api/Events");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            TempData["ErrorMessage"] =
+                "Could not retrieve your events from the RaceDay API.";
+
+            return View(new List<OrganiserEventViewModel>());
+        }
+
+        var events = await response.Content.ReadFromJsonAsync<
+            List<OrganiserEventViewModel>>() ?? new List<OrganiserEventViewModel>();
+
+        var organiserId = User.FindFirst(
+            System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+        events = events
+            .Where(e => e.OrganiserID.ToString() == organiserId)
+            .OrderBy(e => e.EventDate)
+            .ToList();
+
+        return View(events);
     }
 
     [HttpGet]
