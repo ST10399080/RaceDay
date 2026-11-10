@@ -300,4 +300,35 @@ public class OrganiserController : Controller
 
         return RedirectToAction(nameof(Events));
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteEvent(int id)
+    {
+        var accessToken = await HttpContext.GetTokenAsync("access_token");
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return RedirectToAction("Login", "Account");
+        }
+
+        var client = _httpClientFactory.CreateClient("RaceDayAPI");
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", accessToken);
+
+        var response = await client.DeleteAsync($"api/Events/{id}");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            TempData["ErrorMessage"] =
+                "The event could not be deleted. Please try again.";
+
+            return RedirectToAction(nameof(Events));
+        }
+
+        TempData["SuccessMessage"] = "Event deleted successfully!";
+
+        return RedirectToAction(nameof(Events));
+    }
 }
